@@ -3,7 +3,13 @@ import Image from "next/image";
 import type { Journey } from "@/lib/journeys";
 import WishlistButton from "./WishlistButton";
 
-export default function JourneyCard({ journey }: { journey: Journey }) {
+export default function JourneyCard({
+  journey,
+  priority = false,
+}: {
+  journey: Journey;
+  priority?: boolean;
+}) {
   const destinationNames = journey.destinations.map((d) => d.countryName).join(" · ");
 
   return (
@@ -15,6 +21,7 @@ export default function JourneyCard({ journey }: { journey: Journey }) {
               src={journey.heroImage}
               alt={journey.title}
               fill
+              priority={priority}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover transition-transform duration-500 ease-smooth group-hover:scale-110"
             />

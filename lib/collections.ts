@@ -1,4 +1,6 @@
 import type { Tour } from "@/types";
+import type { Journey } from "@/lib/journeys";
+import { getJourneysByIds } from "@/lib/journeys";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 export interface Collection {
@@ -14,6 +16,7 @@ export interface Collection {
 
 export interface CollectionWithTours extends Collection {
   tours: Tour[];
+  journeys: Journey[];
 }
 
 function mapTourRow(row: Record<string, unknown>): Tour {
@@ -78,7 +81,9 @@ export async function getCollectionBySlug(slug: string): Promise<CollectionWithT
 
   const { data, error } = await supabase
     .from("collections")
-    .select("id, name, slug, description, hero_image, meta_title, meta_description, og_image, collection_tours(tours(*))")
+    .select(
+      "id, name, slug, description, hero_image, meta_title, meta_description, og_image, collection_tours(tours(*)), collection_journeys(display_order, journey_id)"
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -89,6 +94,17 @@ export async function getCollectionBySlug(slug: string): Promise<CollectionWithT
 
   const row = data as Record<string, unknown>;
   const collectionTours = (row.collection_tours as { tours: Record<string, unknown> | null }[] | null) ?? [];
+  const collectionJourneys =
+    (row.collection_journeys as { display_order: number; journey_id: string }[] | null) ?? [];
+
+  const orderedJourneyIds = [...collectionJourneys]
+    .sort((a, b) => a.display_order - b.display_order)
+    .map((cj) => cj.journey_id);
+
+  // getJourneysByIds already filters to published (via RLS on getJourneys)
+  // and preserves the display_order we pass in.
+  const journeys = await getJourneysByIds(orderedJourneyIds);
+
   return {
     id: row.id as string,
     name: row.name as string,
@@ -99,5 +115,6 @@ export async function getCollectionBySlug(slug: string): Promise<CollectionWithT
     metaDescription: (row.meta_description as string) ?? "",
     ogImage: (row.og_image as string) ?? "",
     tours: collectionTours.map((ct) => ct.tours).filter((t): t is Record<string, unknown> => Boolean(t)).map(mapTourRow),
+    journeys,
   };
 }

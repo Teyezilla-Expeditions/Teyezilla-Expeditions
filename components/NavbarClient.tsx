@@ -126,6 +126,23 @@ export default function NavbarClient({
     >
       <div ref={navRef} className="mx-auto flex h-full max-w-7xl items-center px-6">
         <Link href="/" className="flex items-center gap-2">
+          <div className="relative h-10 w-[42px] transition-all duration-300 lg:h-12 lg:w-[50px]">
+            <Image
+              src="/logo.png"
+              alt="Teyezilla Expeditions"
+              fill
+              priority
+              quality={70}
+              sizes="50px"
+              className={`object-contain transition-all duration-300 ${
+                transparent ? "brightness-0 invert" : ""
+              }`}
+            />
+          </div>
+        </Link>
+
+        {/* The following is the original version of logo placement on the navbar, which was replaced with a new design. It is kept here for reference in case we want to revert to it in the future. */}
+        {/* <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.png"
             alt="Teyezilla Expeditions"
@@ -137,7 +154,7 @@ export default function NavbarClient({
               transparent ? "brightness-0 invert" : ""
             }`}
           />
-        </Link>
+        </Link> */}
 
         {/* lg: (1024px) is deliberate, not the default choice left unexamined:
             8 nav items plus the phone/search icons and "Plan Your Journey"

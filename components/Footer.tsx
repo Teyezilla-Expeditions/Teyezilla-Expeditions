@@ -40,7 +40,7 @@ export default async function Footer() {
     <footer className="bg-primary pb-16 text-white lg:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2 lg:col-span-1">
-          <Link href="/" aria-label="Teyezilla Expeditions home">
+          {/* <Link href="/" aria-label="Teyezilla Expeditions home">
             <Image
               src="/logo.png"
               alt="Teyezilla Expeditions"
@@ -48,6 +48,16 @@ export default async function Footer() {
               height={48}
               quality={70}
               className="h-12 w-auto brightness-0 invert"
+            />
+          </Link> */}
+          <Link href="/" aria-label="Teyezilla Expeditions home" className="relative block h-12 w-[52px]">
+            <Image
+              src="/logo.png"
+              alt="Teyezilla Expeditions"
+              fill
+              sizes="52px"
+              quality={70}
+              className="object-contain brightness-0 invert"
             />
           </Link>
           <h3 className="sr-only">Teyezilla Expeditions</h3>

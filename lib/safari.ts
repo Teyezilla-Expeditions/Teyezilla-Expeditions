@@ -30,6 +30,46 @@ export async function getTourIdsBySafariThemeSlug(slug: string): Promise<string[
   return (data as unknown as { tour_id: string }[]).map((row) => row.tour_id);
 }
 
+// journey_safari_themes join table -> journey IDs tagged under a given
+// theme. Mirrors getTourIdsBySafariThemeSlug exactly; journeys have no
+// separate "is this a safari" flag the way tours have productType, so
+// theme assignment alone is what makes a journey a safari journey.
+export async function getJourneyIdsBySafariThemeSlug(slug: string): Promise<string[]> {
+  const supabase = getSupabasePublicClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("journey_safari_themes")
+    .select("journey_id, safari_themes!inner(slug)")
+    .eq("safari_themes.slug", slug);
+
+  if (error || !data) {
+    console.warn("[safari] Supabase query failed:", error?.message);
+    return [];
+  }
+
+  return (data as unknown as { journey_id: string }[]).map((row) => row.journey_id);
+}
+
+// Every journey ID that has at least one safari theme assigned, regardless
+// of which one -- powers the unfiltered "Safari Journeys" view (no ?theme=
+// in the URL), same role getPublishedTours().filter(productType === "safari")
+// plays for tours, just sourced from the join table instead of a column
+// since journeys don't have that flag.
+export async function getAllSafariJourneyIds(): Promise<string[]> {
+  const supabase = getSupabasePublicClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase.from("journey_safari_themes").select("journey_id");
+
+  if (error || !data) {
+    console.warn("[safari] Supabase query failed:", error?.message);
+    return [];
+  }
+
+  return Array.from(new Set((data as unknown as { journey_id: string }[]).map((row) => row.journey_id)));
+}
+
 export interface Faq {
   id: string;
   question: string;

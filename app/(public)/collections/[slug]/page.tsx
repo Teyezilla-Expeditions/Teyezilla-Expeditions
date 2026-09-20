@@ -33,12 +33,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// Caps the grid at however many items actually exist, so 1-2 cards don't
-// stretch to fill a 3-column row meant for a full section.
+// Mirrors the pattern from app/(public)/safari/page.tsx -- both grids
+// share one count (see sharedGridClass below) so a lone card in one
+// section doesn't render narrower than a full row in the other.
 function gridColsClass(count: number): string {
-  if (count <= 1) return "grid-cols-1 max-w-sm";
+  if (count <= 1) return "grid-cols-1 max-w-2xl mx-auto";
   if (count === 2) return "sm:grid-cols-2";
   return "sm:grid-cols-2 lg:grid-cols-3";
+}
+
+function headingAlignClass(count: number): string {
+  return count <= 1 ? "text-center" : "";
 }
 
 export default async function CollectionDetailPage({ params }: Props) {
@@ -56,10 +61,19 @@ export default async function CollectionDetailPage({ params }: Props) {
     name: collection.name,
     description: collection.description,
     path: `/collections/${collection.slug}`,
-    items: collection.tours.map((t) => ({ name: t.title, path: `/tours/${t.slug}` })),
+    items: [
+      ...collection.tours.map((t) => ({ name: t.title, path: `/tours/${t.slug}` })),
+      ...collection.journeys.map((j) => ({ name: j.title, path: `/journeys/${j.slug}` })),
+    ],
   });
 
   const hasItems = collection.tours.length > 0 || collection.journeys.length > 0;
+
+  // Both sections share one column count (based on whichever has more
+  // items) rather than sizing independently -- otherwise a lone card in
+  // one section renders narrower than a full row in the other, even
+  // though they're stacked on the same page.
+  const sharedGridClass = gridColsClass(Math.max(collection.tours.length, collection.journeys.length));
 
   return (
     <div className="section">
@@ -73,8 +87,8 @@ export default async function CollectionDetailPage({ params }: Props) {
 
       {collection.tours.length > 0 && (
         <div className="mt-10">
-          <h2 className="font-heading text-xl font-semibold text-foreground">Tours</h2>
-          <div className={`mt-4 grid gap-6 ${gridColsClass(collection.tours.length)}`}>
+          <h2 className={`font-heading text-xl font-semibold text-foreground ${headingAlignClass(collection.tours.length)}`}>Tours</h2>
+          <div className={`mt-4 grid gap-6 ${sharedGridClass}`}>
             {collection.tours.map((tour, i) => (
               <TourCard key={tour.id} tour={tour} priority={i === 0} />
             ))}
@@ -84,8 +98,8 @@ export default async function CollectionDetailPage({ params }: Props) {
 
       {collection.journeys.length > 0 && (
         <div className="mt-10">
-          <h2 className="font-heading text-xl font-semibold text-foreground">Journeys</h2>
-          <div className={`mt-4 grid gap-6 ${gridColsClass(collection.journeys.length)}`}>
+          <h2 className={`font-heading text-xl font-semibold text-foreground ${headingAlignClass(collection.journeys.length)}`}>Journeys</h2>
+          <div className={`mt-4 grid gap-6 ${sharedGridClass}`}>
             {collection.journeys.map((journey, i) => (
               <JourneyCard
                 key={journey.id}

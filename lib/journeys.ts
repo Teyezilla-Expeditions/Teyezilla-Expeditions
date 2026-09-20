@@ -181,11 +181,23 @@ export async function getJourneysByDestination(
 // journeys in the same order as `ids` (the junction table's display_order).
 export async function getJourneysByIds(ids: string[]): Promise<Journey[]> {
   if (ids.length === 0) return [];
-  const all = await getJourneys();
-  const bySlugMap = new Map(all.map((j) => [j.id, j]));
-  return ids.map((id) => bySlugMap.get(id)).filter((j): j is Journey => Boolean(j));
-}
 
+  const supabase = getSupabasePublicClient();
+  if (!supabase) {
+    console.warn("[journeys] Supabase not configured, returning no journeys.");
+    return [];
+  }
+
+  const { data, error } = await supabase.from("journeys").select(SELECT).in("id", ids);
+
+  if (error || !data) {
+    console.warn("[journeys] Supabase query failed:", error?.message);
+    return [];
+  }
+
+  const byId = new Map(data.map((row: any) => [row.id as string, mapRow(row)]));
+  return ids.map((id) => byId.get(id)).filter((j): j is Journey => Boolean(j));
+}
 const DETAIL_SELECT = `
   *,
   journey_destinations(destination_id, destinations(country_name, slug)),

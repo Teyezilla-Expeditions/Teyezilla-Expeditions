@@ -8,6 +8,7 @@ import { addTourAvailabilityDate, removeTourAvailabilityDate } from "@/lib/admin
 import { getDestinations } from "@/lib/destinations";
 import { getActivities } from "@/lib/activities";
 import { getExperienceTypes } from "@/lib/experienceTypes";
+import { getSafariThemes } from "@/lib/safari";
 import { getAdminVehicles } from "@/lib/admin/data/vehicles";
 import { getAdminAccommodations } from "@/lib/admin/data/accommodations";
 import { getMediaItems } from "@/lib/admin/data/media";
@@ -20,11 +21,12 @@ export default async function EditTourPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [tour, destinations, activities, experienceTypes, vehicles, accommodations, mediaItems, allTours, journeys, blogPosts] = await Promise.all([
+  const [tour, destinations, activities, experienceTypes, safariThemes, vehicles, accommodations, mediaItems, allTours, journeys, blogPosts] = await Promise.all([
     getAdminTourBySlug(slug),
     getDestinations(),
     getActivities(),
     getExperienceTypes(),
+    getSafariThemes(),
     getAdminVehicles(),
     getAdminAccommodations(),
     getMediaItems(),
@@ -45,6 +47,7 @@ export default async function EditTourPage({
         destinations={destinations}
         activities={activities}
         experienceTypes={experienceTypes}
+        safariThemes={safariThemes}
         vehicles={vehicles}
         accommodations={accommodations}
         mediaItems={mediaItems}

@@ -54,6 +54,7 @@ export interface TourInput extends ProductScalarsInput {
   experienceTypeIds: string[];
   vehicleIds: string[];
   accommodationIds: string[];
+  safariThemeIds: string[];
   relatedJourneyIds: string[];
   relatedTourIds: string[];
   relatedBlogPostIds: string[];
@@ -72,8 +73,6 @@ function toRow(input: TourInput) {
     title: input.title,
     slug: input.slug || slugify(input.title),
     destination_id: input.destinationId,
-    // The DB column has a check constraint allowing only Easy/Moderate/
-    // Challenging or NULL -- "" (unset in the form) isn't a valid value.
     difficulty: input.difficulty || null,
     duration_days: input.durationDays,
     duration_hours: input.durationHours,
@@ -81,8 +80,6 @@ function toRow(input: TourInput) {
     price_from: input.priceFrom,
     currency: input.currency,
     tagline: input.tagline || null,
-    // Hard-capped client-side via the textarea's maxLength; sliced again
-    // here in case something bypasses that (a direct API call, for example).
     short_description: input.shortDescription.slice(0, 250),
     overview: input.overview,
     inclusions: input.inclusions,
@@ -99,8 +96,6 @@ function toRow(input: TourInput) {
   };
 }
 
-// Replaces a tour's rows in a related-content join table wholesale: clear,
-// then re-insert whatever's currently selected, in the order given.
 async function syncRelatedTable(
   supabase: SupabaseLike,
   table: string,
@@ -122,10 +117,17 @@ async function syncRelatedTable(
   if (error) throw new Error(error.message);
 }
 
-// Every one of these only depends on the already-known tourId, not on each
-// other's results, so they run as one batch of parallel round trips instead
-// of ~11 sequential ones -- this was the single biggest contributor to a
-// tour save feeling slow.
+async function syncSafariThemes(supabase: SupabaseLike, tourId: string, safariThemeIds: string[]) {
+  const { error: deleteError } = await supabase.from("tour_safari_themes").delete().eq("tour_id", tourId);
+  if (deleteError) throw new Error(deleteError.message);
+  if (safariThemeIds.length === 0) return;
+
+  const { error } = await supabase
+    .from("tour_safari_themes")
+    .insert(safariThemeIds.map((safariThemeId) => ({ tour_id: tourId, safari_theme_id: safariThemeId })));
+  if (error) throw new Error(error.message);
+}
+
 async function syncTourRelations(supabase: SupabaseLike, tourId: string, input: TourInput) {
   await Promise.all([
     syncPricingTiers(supabase, "tour_pricing_tiers", "tour_id", tourId, input.pricingTiers),
@@ -136,6 +138,7 @@ async function syncTourRelations(supabase: SupabaseLike, tourId: string, input: 
     syncExperienceTypes(supabase, "tour_experience_types", "tour_id", tourId, input.experienceTypeIds),
     syncVehicles(supabase, "tour_vehicles", "tour_id", tourId, input.vehicleIds),
     syncAccommodations(supabase, "tour_accommodations", "tour_id", tourId, input.accommodationIds),
+    syncSafariThemes(supabase, tourId, input.safariThemeIds),
     syncRelatedTable(supabase, "tour_related_journeys", tourId, input.relatedJourneyIds, "related_journey_id"),
     syncRelatedTable(supabase, "tour_related_tours", tourId, input.relatedTourIds, "related_tour_id"),
     syncRelatedTable(supabase, "tour_related_blog_posts", tourId, input.relatedBlogPostIds, "blog_post_id"),
@@ -170,9 +173,6 @@ export async function updateTour(id: string, input: TourInput): Promise<void> {
   redirectWithSaved("/admin/tours", `"${input.title}" saved.`);
 }
 
-// 23503 = foreign key violation. bookings/reviews/inquiries reference
-// tours without cascading, so a tour that's actually been booked, reviewed,
-// or enquired about blocks the delete with a raw constraint error otherwise.
 function friendlyTourDeleteError(error: { code?: string; message: string }): string {
   if (error.code === "23503") {
     return "Can't delete this tour -- it's still referenced by a booking, review, or inquiry. Remove those first.";

@@ -3,6 +3,7 @@ import TourForm from "@/components/admin/TourForm";
 import { getDestinations } from "@/lib/destinations";
 import { getActivities } from "@/lib/activities";
 import { getExperienceTypes } from "@/lib/experienceTypes";
+import { getSafariThemes } from "@/lib/safari";
 import { getAdminVehicles } from "@/lib/admin/data/vehicles";
 import { getAdminAccommodations } from "@/lib/admin/data/accommodations";
 import { getMediaItems } from "@/lib/admin/data/media";
@@ -11,10 +12,11 @@ import { getAdminJourneys } from "@/lib/admin/data/journeys";
 import { getAdminBlogPosts } from "@/lib/admin/data/blog";
 
 export default async function NewTourPage() {
-  const [destinations, activities, experienceTypes, vehicles, accommodations, mediaItems, allTours, journeys, blogPosts] = await Promise.all([
+  const [destinations, activities, experienceTypes, safariThemes, vehicles, accommodations, mediaItems, allTours, journeys, blogPosts] = await Promise.all([
     getDestinations(),
     getActivities(),
     getExperienceTypes(),
+    getSafariThemes(),
     getAdminVehicles(),
     getAdminAccommodations(),
     getMediaItems(),
@@ -30,6 +32,7 @@ export default async function NewTourPage() {
         destinations={destinations}
         activities={activities}
         experienceTypes={experienceTypes}
+        safariThemes={safariThemes}
         vehicles={vehicles}
         accommodations={accommodations}
         mediaItems={mediaItems}

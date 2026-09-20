@@ -31,6 +31,7 @@ export interface AdminTourDetail extends Tour, ProductScalars {
   experienceTypeIds: string[];
   vehicleIds: string[];
   accommodationIds: string[];
+  safariThemeIds: string[];
   relatedJourneyIds: string[];
   relatedTourIds: string[];
   relatedBlogPostIds: string[];
@@ -71,6 +72,7 @@ function mapRow(row: Record<string, any>): AdminTourDetail {
     experienceTypeIds: (row.tour_experience_types ?? []).map((e: any) => e.experience_type_id),
     vehicleIds: (row.tour_vehicles ?? []).map((v: any) => v.vehicle_id),
     accommodationIds: (row.tour_accommodations ?? []).map((a: any) => a.accommodation_id),
+    safariThemeIds: (row.tour_safari_themes ?? []).map((s: any) => s.safari_theme_id),
     relatedJourneyIds: [...(row.tour_related_journeys ?? [])]
       .sort((a: any, b: any) => a.display_order - b.display_order)
       .map((r: any) => r.related_journey_id),
@@ -113,12 +115,6 @@ function mapListRow(row: any): Tour {
   };
 }
 
-// Uses the authenticated staff session (not the public client) because
-// tours' public-read RLS only exposes status='published' rows; the admin
-// list needs drafts too, which the "Staff can manage tours" policy grants
-// via its unconditional using(true). Mirrors getAdminJourneys() -- the
-// public getTours() (lib/tours.ts) being used here instead was the actual
-// cause of newly-created (draft) tours never appearing in Tour Management.
 export async function getAdminTours(): Promise<Tour[]> {
   const supabase = await getSupabaseServerClient();
   if (!supabase) {
@@ -183,13 +179,12 @@ const DETAIL_SELECT = `
   tour_experience_types(experience_type_id),
   tour_vehicles(vehicle_id),
   tour_accommodations(accommodation_id),
+  tour_safari_themes(safari_theme_id),
   tour_related_journeys(related_journey_id, display_order),
   tour_related_tours!tour_related_tours_tour_id_fkey(related_tour_id, display_order),
   tour_related_blog_posts(blog_post_id, display_order)
 `;
 
-// Admin edit form needs fields (inclusions/exclusions/itinerary/logistics/
-// pricing tiers/highlights/add-ons/activities) that the public Tour type doesn't carry.
 export async function getAdminTourBySlug(slug: string): Promise<AdminTourDetail | undefined> {
   const supabase = await getSupabaseServerClient();
   if (!supabase) {

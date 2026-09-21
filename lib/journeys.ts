@@ -93,28 +93,28 @@ function mapTourRow(row: Record<string, unknown>): Tour {
   };
 }
 
-function mapRow(row: Record<string, any>): Journey {
+function mapRow(row: Record<string, unknown>): Journey {
   return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    heroImage: row.hero_image ?? "",
-    tagline: row.tagline ?? "",
-    shortDescription: row.short_description ?? "",
+    id: row.id as string,
+    slug: row.slug as string,
+    title: row.title as string,
+    heroImage: (row.hero_image as string) ?? "",
+    tagline: (row.tagline as string) ?? "",
+    shortDescription: (row.short_description as string) ?? "",
     durationDays: Number(row.duration_days ?? 0),
     priceFrom: Number(row.price_from ?? 0),
-    currency: row.currency ?? "USD",
+    currency: (row.currency as string) ?? "USD",
     featured: Boolean(row.featured),
-    destinations: (row.journey_destinations ?? [])
-      .filter((jd: any) => jd.destinations)
-      .map((jd: any) => ({
-        id: jd.destination_id,
-        countryName: jd.destinations.country_name,
-        slug: jd.destinations.slug,
+    destinations: ((row.journey_destinations as Record<string, unknown>[]) ?? [])
+      .filter((jd) => jd.destinations)
+      .map((jd) => ({
+        id: jd.destination_id as string,
+        countryName: (jd.destinations as Record<string, unknown>).country_name as string,
+        slug: (jd.destinations as Record<string, unknown>).slug as string,
       })),
-    journeyTypes: (row.journey_journey_types ?? [])
-      .map((jjt: any) => jjt.journey_types?.name)
-      .filter(Boolean),
+    journeyTypes: ((row.journey_journey_types as Record<string, unknown>[]) ?? [])
+      .map((jjt) => (jjt.journey_types as Record<string, unknown> | undefined)?.name as string | undefined)
+      .filter(Boolean) as string[],
   };
 }
 
@@ -155,7 +155,7 @@ export async function getJourneys(): Promise<Journey[]> {
     return [];
   }
 
-  return data.map(mapRow);
+  return data.map((row) => mapRow(row as Record<string, unknown>));
 }
 
 // RLS already restricts anon reads to status = 'published', so this only
@@ -195,9 +195,12 @@ export async function getJourneysByIds(ids: string[]): Promise<Journey[]> {
     return [];
   }
 
-  const byId = new Map(data.map((row: any) => [row.id as string, mapRow(row)]));
+  const byId = new Map(
+    data.map((row) => [(row as Record<string, unknown>).id as string, mapRow(row as Record<string, unknown>)])
+  );
   return ids.map((id) => byId.get(id)).filter((j): j is Journey => Boolean(j));
 }
+
 const DETAIL_SELECT = `
   *,
   journey_destinations(destination_id, destinations(country_name, slug)),
@@ -229,75 +232,81 @@ export async function getJourneyBySlug(slug: string): Promise<JourneyDetail | un
     return undefined;
   }
 
-  const row = data as any;
+  const row = data as Record<string, unknown>;
   return {
     ...mapRow(row),
-    overview: row.overview ?? "",
-    difficulty: row.difficulty ?? "",
-    inclusions: row.inclusions ?? [],
-    exclusions: row.exclusions ?? [],
-    itinerary: row.itinerary ?? [],
-    meetingPoint: row.meeting_point ?? "",
-    pickupLocations: row.pickup_locations ?? [],
-    status: row.status ?? "draft",
-    metaTitle: row.meta_title ?? "",
-    metaDescription: row.meta_description ?? "",
-    ogImage: row.og_image ?? "",
+    overview: (row.overview as string) ?? "",
+    difficulty: (row.difficulty as string) ?? "",
+    inclusions: (row.inclusions as string[]) ?? [],
+    exclusions: (row.exclusions as string[]) ?? [],
+    itinerary: (row.itinerary as ItineraryDay[]) ?? [],
+    meetingPoint: (row.meeting_point as string) ?? "",
+    pickupLocations: (row.pickup_locations as string[]) ?? [],
+    status: (row.status as string) ?? "draft",
+    metaTitle: (row.meta_title as string) ?? "",
+    metaDescription: (row.meta_description as string) ?? "",
+    ogImage: (row.og_image as string) ?? "",
     ...mapProductScalars(row),
-    pricingTiers: (row.journey_pricing_tiers ?? [])
+    pricingTiers: ((row.journey_pricing_tiers as Record<string, unknown>[]) ?? [])
       .map(mapPricingTierRow)
       .sort((a: PricingTier, b: PricingTier) => a.displayOrder - b.displayOrder),
-    highlights: (row.journey_highlights ?? [])
+    highlights: ((row.journey_highlights as Record<string, unknown>[]) ?? [])
       .map(mapHighlightRow)
       .sort((a: ProductHighlight, b: ProductHighlight) => a.displayOrder - b.displayOrder),
-    faqs: (row.journey_faqs ?? [])
+    faqs: ((row.journey_faqs as Record<string, unknown>[]) ?? [])
       .map(mapFaqRow)
       .sort((a: ProductFaq, b: ProductFaq) => a.displayOrder - b.displayOrder),
-    addons: (row.journey_addons ?? [])
+    addons: ((row.journey_addons as Record<string, unknown>[]) ?? [])
       .map(mapAddonRow)
       .sort((a: ProductAddon, b: ProductAddon) => a.displayOrder - b.displayOrder),
-    activities: (row.journey_activities ?? [])
-      .map((a: any) => a.activities)
-      .filter(Boolean)
-      .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, description: a.description ?? "", icon: a.icon ?? "" })),
-    vehicles: (row.journey_vehicles ?? [])
-      .map((v: any) => v.vehicles)
-      .filter(Boolean)
-      .map((v: any) => ({
-        id: v.id,
-        name: v.name,
-        slug: v.slug,
-        vehicleType: v.vehicle_type ?? "",
-        seats: v.seats ?? null,
-        description: v.description ?? "",
-        features: v.features ?? [],
-        image: v.image ?? "",
+    activities: ((row.journey_activities as Record<string, unknown>[]) ?? [])
+      .map((a) => a.activities as Record<string, unknown> | undefined)
+      .filter((a): a is Record<string, unknown> => Boolean(a))
+      .map((a) => ({
+        id: a.id as string,
+        name: a.name as string,
+        slug: a.slug as string,
+        description: (a.description as string) ?? "",
+        icon: (a.icon as string) ?? "",
       })),
-    accommodations: (row.journey_accommodations ?? [])
-      .map((a: any) => a.accommodations)
-      .filter(Boolean)
-      .map((a: any) => ({
-        id: a.id,
-        destinationId: a.destination_id,
-        name: a.name,
-        slug: a.slug ?? "",
-        description: a.description ?? "",
-        heroImage: a.hero_image ?? "",
-        tier: a.tier ?? "",
+    vehicles: ((row.journey_vehicles as Record<string, unknown>[]) ?? [])
+      .map((v) => v.vehicles as Record<string, unknown> | undefined)
+      .filter((v): v is Record<string, unknown> => Boolean(v))
+      .map((v) => ({
+        id: v.id as string,
+        name: v.name as string,
+        slug: v.slug as string,
+        vehicleType: (v.vehicle_type as string) ?? "",
+        seats: (v.seats as number | null) ?? null,
+        description: (v.description as string) ?? "",
+        features: (v.features as string[]) ?? [],
+        image: (v.image as string) ?? "",
       })),
-    includedTours: [...(row.journey_tours ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((jt: any) => jt.tours)
-      .filter(Boolean)
+    accommodations: ((row.journey_accommodations as Record<string, unknown>[]) ?? [])
+      .map((a) => a.accommodations as Record<string, unknown> | undefined)
+      .filter((a): a is Record<string, unknown> => Boolean(a))
+      .map((a) => ({
+        id: a.id as string,
+        destinationId: a.destination_id as string,
+        name: a.name as string,
+        slug: (a.slug as string) ?? "",
+        description: (a.description as string) ?? "",
+        heroImage: (a.hero_image as string) ?? "",
+        tier: (a.tier as string) ?? "",
+      })),
+    includedTours: [...((row.journey_tours as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((jt) => jt.tours as Record<string, unknown> | undefined)
+      .filter((t): t is Record<string, unknown> => Boolean(t))
       .map(mapTourRow),
-    relatedJourneyIds: [...(row.journey_related_journeys ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((r: any) => r.related_journey_id),
-    relatedTourIds: [...(row.journey_related_tours ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((r: any) => r.tour_id),
-    relatedBlogPostIds: [...(row.journey_related_blog_posts ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((r: any) => r.blog_post_id),
+    relatedJourneyIds: [...((row.journey_related_journeys as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((r) => r.related_journey_id as string),
+    relatedTourIds: [...((row.journey_related_tours as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((r) => r.tour_id as string),
+    relatedBlogPostIds: [...((row.journey_related_blog_posts as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((r) => r.blog_post_id as string),
   };
 }

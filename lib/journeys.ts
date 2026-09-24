@@ -15,6 +15,10 @@ import {
   type ProductFaq,
   type ProductAddon,
   type ProductScalars,
+  type PricingTierRow,
+  type ProductHighlightRow,
+  type ProductFaqRow,
+  type ProductAddonRow,
 } from "@/lib/productShared";
 
 export type { ItineraryDay, PricingTier, ProductHighlight, ProductFaq, ProductAddon };
@@ -247,16 +251,16 @@ export async function getJourneyBySlug(slug: string): Promise<JourneyDetail | un
     metaDescription: (row.meta_description as string) ?? "",
     ogImage: (row.og_image as string) ?? "",
     ...mapProductScalars(row),
-    pricingTiers: ((row.journey_pricing_tiers as Record<string, unknown>[]) ?? [])
+    pricingTiers: ((row.journey_pricing_tiers as PricingTierRow[]) ?? [])
       .map(mapPricingTierRow)
       .sort((a: PricingTier, b: PricingTier) => a.displayOrder - b.displayOrder),
-    highlights: ((row.journey_highlights as Record<string, unknown>[]) ?? [])
+    highlights: ((row.journey_highlights as ProductHighlightRow[]) ?? [])
       .map(mapHighlightRow)
       .sort((a: ProductHighlight, b: ProductHighlight) => a.displayOrder - b.displayOrder),
-    faqs: ((row.journey_faqs as Record<string, unknown>[]) ?? [])
+    faqs: ((row.journey_faqs as ProductFaqRow[]) ?? [])
       .map(mapFaqRow)
       .sort((a: ProductFaq, b: ProductFaq) => a.displayOrder - b.displayOrder),
-    addons: ((row.journey_addons as Record<string, unknown>[]) ?? [])
+    addons: ((row.journey_addons as ProductAddonRow[]) ?? [])
       .map(mapAddonRow)
       .sort((a: ProductAddon, b: ProductAddon) => a.displayOrder - b.displayOrder),
     activities: ((row.journey_activities as Record<string, unknown>[]) ?? [])
@@ -292,7 +296,7 @@ export async function getJourneyBySlug(slug: string): Promise<JourneyDetail | un
         slug: (a.slug as string) ?? "",
         description: (a.description as string) ?? "",
         heroImage: (a.hero_image as string) ?? "",
-        tier: (a.tier as string) ?? "",
+        tier: (a.tier as Accommodation["tier"]) ?? "",
       })),
     includedTours: [...((row.journey_tours as Record<string, unknown>[]) ?? [])]
       .sort((a, b) => (a.display_order as number) - (b.display_order as number))

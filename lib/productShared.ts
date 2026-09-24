@@ -84,7 +84,7 @@ export interface ProductScalars {
   teyezillaMoment: string;
 }
 
-interface PricingTierRow {
+export interface PricingTierRow {
   id: string;
   tier_name: string;
   tagline: string | null;
@@ -96,21 +96,21 @@ interface PricingTierRow {
   display_order: number | null;
 }
 
-interface ProductHighlightRow {
+export interface ProductHighlightRow {
   id: string;
   title: string;
   description: string | null;
   display_order: number | null;
 }
 
-interface ProductFaqRow {
+export interface ProductFaqRow {
   id: string;
   question: string;
   answer: string;
   display_order: number | null;
 }
 
-interface ProductAddonRow {
+export interface ProductAddonRow {
   id: string;
   kind: "addon" | "extension";
   title: string;

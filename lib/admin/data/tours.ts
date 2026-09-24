@@ -12,6 +12,10 @@ import {
   type ProductFaq,
   type ProductAddon,
   type ProductScalars,
+  type PricingTierRow,
+  type ProductHighlightRow,
+  type ProductFaqRow,
+  type ProductAddonRow,
 } from "@/lib/productShared";
 
 export type { ItineraryDay };
@@ -52,9 +56,9 @@ function mapRow(row: Record<string, unknown>): AdminTourDetail {
     durationHours: row.duration_hours != null ? Number(row.duration_hours) : null,
     priceFrom: Number(row.price_from ?? 0),
     currency: (row.currency as string) ?? "USD",
-    difficulty: (row.difficulty as string) ?? "",
+    difficulty: (row.difficulty as Tour["difficulty"]) ?? "",
     featured: Boolean(row.featured),
-    status: (row.status as string) ?? "draft",
+    status: (row.status as Tour["status"]) ?? "draft",
     metaTitle: (row.meta_title as string) ?? "",
     metaDescription: (row.meta_description as string) ?? "",
     ogImage: (row.og_image as string) ?? "",
@@ -64,10 +68,10 @@ function mapRow(row: Record<string, unknown>): AdminTourDetail {
     meetingPoint: (row.meeting_point as string) ?? "",
     pickupLocations: (row.pickup_locations as string[]) ?? [],
     ...mapProductScalars(row),
-    pricingTiers: ((row.tour_pricing_tiers as Record<string, unknown>[]) ?? []).map(mapPricingTierRow),
-    highlights: ((row.tour_highlights as Record<string, unknown>[]) ?? []).map(mapHighlightRow),
-    faqs: ((row.tour_faqs as Record<string, unknown>[]) ?? []).map(mapFaqRow),
-    addons: ((row.tour_addons as Record<string, unknown>[]) ?? []).map(mapAddonRow),
+    pricingTiers: ((row.tour_pricing_tiers as PricingTierRow[]) ?? []).map(mapPricingTierRow),
+    highlights: ((row.tour_highlights as ProductHighlightRow[]) ?? []).map(mapHighlightRow),
+    faqs: ((row.tour_faqs as ProductFaqRow[]) ?? []).map(mapFaqRow),
+    addons: ((row.tour_addons as ProductAddonRow[]) ?? []).map(mapAddonRow),
     activityIds: ((row.tour_activities as Record<string, unknown>[]) ?? []).map((a) => a.activity_id as string),
     experienceTypeIds: ((row.tour_experience_types as Record<string, unknown>[]) ?? []).map(
       (e) => e.experience_type_id as string

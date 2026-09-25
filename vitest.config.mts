@@ -16,5 +16,11 @@ export default defineConfig(({ mode }) => ({
     env: loadEnv(mode, process.cwd(), ""),
     include: ["tests/**/*.test.ts"],
     testTimeout: 20000,
+    // beforeAll/afterEach hooks in tests/rls/*.test.ts make real Supabase
+    // network calls (see tests/rls/helpers.ts) -- Vitest's default 10s
+    // hook timeout is tight enough that a cold/distant connection on CI
+    // runners can exceed it even though the equivalent call finishes in
+    // ~1-2s locally. Matches testTimeout above for the same reason.
+    hookTimeout: 20000,
   },
 }));

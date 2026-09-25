@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Destination } from "@/types";
 import type { Activity } from "@/lib/activities";
 import type { ExperienceType } from "@/lib/experienceTypes";
+import type { SafariTheme } from "@/lib/safari";
 import type { AdminVehicle } from "@/lib/admin/data/vehicles";
 import type { AdminAccommodation } from "@/lib/admin/data/accommodations";
 import type { AdminTourDetail, ItineraryDay } from "@/lib/admin/data/tours";
@@ -28,6 +29,7 @@ export default function TourForm({
   destinations,
   activities,
   experienceTypes,
+  safariThemes,
   vehicles,
   accommodations,
   mediaItems,
@@ -39,6 +41,7 @@ export default function TourForm({
   destinations: Destination[];
   activities: Activity[];
   experienceTypes: ExperienceType[];
+  safariThemes: SafariTheme[];
   vehicles: AdminVehicle[];
   accommodations: AdminAccommodation[];
   mediaItems: MediaItem[];
@@ -63,11 +66,16 @@ export default function TourForm({
   const [addons, setAddons] = useState<AddonInput[]>(existingTour?.addons.map((a) => ({ ...a })) ?? []);
   const [activityIds, setActivityIds] = useState<string[]>(existingTour?.activityIds ?? []);
   const [experienceTypeIds, setExperienceTypeIds] = useState<string[]>(existingTour?.experienceTypeIds ?? []);
+  const [safariThemeIds, setSafariThemeIds] = useState<string[]>(existingTour?.safariThemeIds ?? []);
   const [vehicleIds, setVehicleIds] = useState<string[]>(existingTour?.vehicleIds ?? []);
   const [accommodationIds, setAccommodationIds] = useState<string[]>(existingTour?.accommodationIds ?? []);
   const [relatedJourneyIds, setRelatedJourneyIds] = useState<string[]>(existingTour?.relatedJourneyIds ?? []);
   const [relatedTourIds, setRelatedTourIds] = useState<string[]>(existingTour?.relatedTourIds ?? []);
   const [relatedBlogPostIds, setRelatedBlogPostIds] = useState<string[]>(existingTour?.relatedBlogPostIds ?? []);
+
+  function toggleSafariTheme(id: string) {
+    setSafariThemeIds((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -121,6 +129,7 @@ export default function TourForm({
       addons,
       activityIds,
       experienceTypeIds,
+      safariThemeIds,
       vehicleIds,
       accommodationIds,
       relatedJourneyIds,
@@ -283,6 +292,27 @@ export default function TourForm({
       <AddonsEditor addons={addons} onChange={setAddons} />
       <ActivitiesPicker activities={activities} selectedIds={activityIds} onChange={setActivityIds} />
       <ExperienceTypesPicker experienceTypes={experienceTypes} selectedIds={experienceTypeIds} onChange={setExperienceTypeIds} />
+
+      <section className="card p-6">
+        <h2 className="font-heading text-lg font-semibold text-foreground">Safari Themes</h2>
+        <p className="mt-1 text-xs text-foreground/50">
+          Only relevant if this tour&rsquo;s Product Type above is set to Safari -- controls which
+          Signature Safari filter cards on the public Safari page this tour appears under.
+        </p>
+        {safariThemes.length === 0 ? (
+          <p className="mt-3 text-sm text-foreground/50">No safari themes set up yet.</p>
+        ) : (
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {safariThemes.map((t) => (
+              <label key={t.id} className="flex items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={safariThemeIds.includes(t.id)} onChange={() => toggleSafariTheme(t.id)} />
+                {t.name}
+              </label>
+            ))}
+          </div>
+        )}
+      </section>
+
       <VehiclesPicker vehicles={vehicles} selectedIds={vehicleIds} onChange={setVehicleIds} />
       <AccommodationsPicker accommodations={accommodations} selectedIds={accommodationIds} onChange={setAccommodationIds} />
 

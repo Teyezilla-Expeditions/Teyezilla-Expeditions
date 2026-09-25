@@ -12,6 +12,10 @@ import {
   type ProductFaq,
   type ProductAddon,
   type ProductScalars,
+  type PricingTierRow,
+  type ProductHighlightRow,
+  type ProductFaqRow,
+  type ProductAddonRow,
 } from "@/lib/productShared";
 
 export type { ItineraryDay };
@@ -31,55 +35,63 @@ export interface AdminTourDetail extends Tour, ProductScalars {
   experienceTypeIds: string[];
   vehicleIds: string[];
   accommodationIds: string[];
+  safariThemeIds: string[];
   relatedJourneyIds: string[];
   relatedTourIds: string[];
   relatedBlogPostIds: string[];
 }
 
-function mapRow(row: Record<string, any>): AdminTourDetail {
+function mapRow(row: Record<string, unknown>): AdminTourDetail {
   return {
-    id: row.id,
-    slug: row.slug,
-    destinationId: row.destination_id,
-    title: row.title,
-    categoryLabel: row.category_label ?? "",
-    heroImage: row.hero_image ?? "",
-    tagline: row.tagline ?? "",
-    shortDescription: row.short_description ?? "",
-    overview: row.overview ?? "",
+    id: row.id as string,
+    slug: row.slug as string,
+    destinationId: row.destination_id as string,
+    title: row.title as string,
+    categoryLabel: (row.category_label as string) ?? "",
+    heroImage: (row.hero_image as string) ?? "",
+    tagline: (row.tagline as string) ?? "",
+    shortDescription: (row.short_description as string) ?? "",
+    overview: (row.overview as string) ?? "",
     durationDays: Number(row.duration_days ?? 0),
     durationHours: row.duration_hours != null ? Number(row.duration_hours) : null,
     priceFrom: Number(row.price_from ?? 0),
-    currency: row.currency ?? "USD",
-    difficulty: row.difficulty ?? "",
+    currency: (row.currency as string) ?? "USD",
+    difficulty: (row.difficulty as Tour["difficulty"]) ?? "",
     featured: Boolean(row.featured),
-    status: row.status ?? "draft",
-    metaTitle: row.meta_title ?? "",
-    metaDescription: row.meta_description ?? "",
-    ogImage: row.og_image ?? "",
-    inclusions: row.inclusions ?? [],
-    exclusions: row.exclusions ?? [],
-    itinerary: row.itinerary ?? [],
-    meetingPoint: row.meeting_point ?? "",
-    pickupLocations: row.pickup_locations ?? [],
+    status: (row.status as Tour["status"]) ?? "draft",
+    metaTitle: (row.meta_title as string) ?? "",
+    metaDescription: (row.meta_description as string) ?? "",
+    ogImage: (row.og_image as string) ?? "",
+    inclusions: (row.inclusions as string[]) ?? [],
+    exclusions: (row.exclusions as string[]) ?? [],
+    itinerary: (row.itinerary as ItineraryDay[]) ?? [],
+    meetingPoint: (row.meeting_point as string) ?? "",
+    pickupLocations: (row.pickup_locations as string[]) ?? [],
     ...mapProductScalars(row),
-    pricingTiers: (row.tour_pricing_tiers ?? []).map(mapPricingTierRow),
-    highlights: (row.tour_highlights ?? []).map(mapHighlightRow),
-    faqs: (row.tour_faqs ?? []).map(mapFaqRow),
-    addons: (row.tour_addons ?? []).map(mapAddonRow),
-    activityIds: (row.tour_activities ?? []).map((a: any) => a.activity_id),
-    experienceTypeIds: (row.tour_experience_types ?? []).map((e: any) => e.experience_type_id),
-    vehicleIds: (row.tour_vehicles ?? []).map((v: any) => v.vehicle_id),
-    accommodationIds: (row.tour_accommodations ?? []).map((a: any) => a.accommodation_id),
-    relatedJourneyIds: [...(row.tour_related_journeys ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((r: any) => r.related_journey_id),
-    relatedTourIds: [...(row.tour_related_tours ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((r: any) => r.related_tour_id),
-    relatedBlogPostIds: [...(row.tour_related_blog_posts ?? [])]
-      .sort((a: any, b: any) => a.display_order - b.display_order)
-      .map((r: any) => r.blog_post_id),
+    pricingTiers: ((row.tour_pricing_tiers as PricingTierRow[]) ?? []).map(mapPricingTierRow),
+    highlights: ((row.tour_highlights as ProductHighlightRow[]) ?? []).map(mapHighlightRow),
+    faqs: ((row.tour_faqs as ProductFaqRow[]) ?? []).map(mapFaqRow),
+    addons: ((row.tour_addons as ProductAddonRow[]) ?? []).map(mapAddonRow),
+    activityIds: ((row.tour_activities as Record<string, unknown>[]) ?? []).map((a) => a.activity_id as string),
+    experienceTypeIds: ((row.tour_experience_types as Record<string, unknown>[]) ?? []).map(
+      (e) => e.experience_type_id as string
+    ),
+    vehicleIds: ((row.tour_vehicles as Record<string, unknown>[]) ?? []).map((v) => v.vehicle_id as string),
+    accommodationIds: ((row.tour_accommodations as Record<string, unknown>[]) ?? []).map(
+      (a) => a.accommodation_id as string
+    ),
+    safariThemeIds: ((row.tour_safari_themes as Record<string, unknown>[]) ?? []).map(
+      (s) => s.safari_theme_id as string
+    ),
+    relatedJourneyIds: [...((row.tour_related_journeys as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((r) => r.related_journey_id as string),
+    relatedTourIds: [...((row.tour_related_tours as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((r) => r.related_tour_id as string),
+    relatedBlogPostIds: [...((row.tour_related_blog_posts as Record<string, unknown>[]) ?? [])]
+      .sort((a, b) => (a.display_order as number) - (b.display_order as number))
+      .map((r) => r.blog_post_id as string),
   };
 }
 
@@ -89,27 +101,27 @@ const LIST_SELECT = `
   difficulty, featured, status, meta_title, meta_description, og_image
 `;
 
-function mapListRow(row: any): Tour {
+function mapListRow(row: Record<string, unknown>): Tour {
   return {
-    id: row.id,
-    slug: row.slug,
-    destinationId: row.destination_id,
-    title: row.title,
-    categoryLabel: row.category_label ?? "",
-    productType: row.product_type ?? "experience",
-    heroImage: row.hero_image ?? "",
-    tagline: row.tagline ?? "",
-    shortDescription: row.short_description ?? "",
+    id: row.id as string,
+    slug: row.slug as string,
+    destinationId: row.destination_id as string,
+    title: row.title as string,
+    categoryLabel: (row.category_label as string) ?? "",
+    productType: (row.product_type as Tour["productType"]) ?? "experience",
+    heroImage: (row.hero_image as string) ?? "",
+    tagline: (row.tagline as string) ?? "",
+    shortDescription: (row.short_description as string) ?? "",
     durationDays: Number(row.duration_days ?? 0),
     durationHours: row.duration_hours != null ? Number(row.duration_hours) : null,
     priceFrom: Number(row.price_from ?? 0),
-    currency: row.currency ?? "USD",
-    difficulty: row.difficulty ?? "",
+    currency: (row.currency as string) ?? "USD",
+    difficulty: (row.difficulty as Tour["difficulty"]) ?? "",
     featured: Boolean(row.featured),
-    status: row.status ?? "draft",
-    metaTitle: row.meta_title ?? "",
-    metaDescription: row.meta_description ?? "",
-    ogImage: row.og_image ?? "",
+    status: (row.status as Tour["status"]) ?? "draft",
+    metaTitle: (row.meta_title as string) ?? "",
+    metaDescription: (row.meta_description as string) ?? "",
+    ogImage: (row.og_image as string) ?? "",
   };
 }
 
@@ -136,7 +148,7 @@ export async function getAdminTours(): Promise<Tour[]> {
     return [];
   }
 
-  return data.map(mapListRow);
+  return data.map((row) => mapListRow(row as Record<string, unknown>));
 }
 
 export interface AdminToursQuery {
@@ -170,7 +182,7 @@ export async function getAdminToursPaginated(query: AdminToursQuery): Promise<{ 
     return { items: [], total: 0 };
   }
 
-  return { items: data.map(mapListRow), total: count ?? 0 };
+  return { items: data.map((row) => mapListRow(row as Record<string, unknown>)), total: count ?? 0 };
 }
 
 const DETAIL_SELECT = `
@@ -183,6 +195,7 @@ const DETAIL_SELECT = `
   tour_experience_types(experience_type_id),
   tour_vehicles(vehicle_id),
   tour_accommodations(accommodation_id),
+  tour_safari_themes(safari_theme_id),
   tour_related_journeys(related_journey_id, display_order),
   tour_related_tours!tour_related_tours_tour_id_fkey(related_tour_id, display_order),
   tour_related_blog_posts(blog_post_id, display_order)
@@ -204,5 +217,5 @@ export async function getAdminTourBySlug(slug: string): Promise<AdminTourDetail 
     return undefined;
   }
 
-  return mapRow(data);
+  return mapRow(data as Record<string, unknown>);
 }
